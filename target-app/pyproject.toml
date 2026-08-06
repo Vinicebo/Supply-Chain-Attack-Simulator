@@ -1,0 +1,42 @@
+[project]
+name = "target-app"
+version = "0.1.0"
+description = "A FastAPI app that (vulnerably) depends on an internal package name."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "python-dotenv>=1.0",
+    # This is the dependency an attacker preys on. In production the team
+    # expects this to come from their PRIVATE index. If the installer also
+    # searches a public index, the higher-versioned malicious package wins.
+    "internal-auth-utils",
+]
+
+[tool.uv]
+# --- THE VULNERABLE CONFIGURATION -----------------------------------------
+# Two indexes are configured: the company's PRIVATE registry (default) and
+# public PyPI. On its own that is fine -- by default uv uses the "first-index"
+# strategy and stops at the first index that has a given name.
+#
+# The footgun is `index-strategy = "unsafe-best-match"`: it makes uv query
+# ALL indexes for every name and pick the HIGHEST version across them. With no
+# per-name source pin, the attacker's public `internal-auth-utils==99.0.0`
+# outranks the private `1.4.2` -> dependency confusion. uv literally calls this
+# strategy "unsafe" for this reason.
+#
+# The scoped-registry DEFENSE (defense/scoped_registry.py) adds a
+# [tool.uv.sources] pin so `internal-auth-utils` resolves from `local-private`
+# ONLY, which closes the hole even under unsafe-best-match.
+index-strategy = "unsafe-best-match"
+
+# Allow http for the loopback private index (this is a local demo).
+[[tool.uv.index]]
+name = "local-private"
+url = "http://127.0.0.1:8080/simple/"
+default = true
+
+[[tool.uv.index]]
+name = "public-pypi"
+url = "https://pypi.org/simple/"

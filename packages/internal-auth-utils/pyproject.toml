@@ -1,0 +1,8 @@
+# Build-system only. Metadata + the post-install/build hook live in setup.py
+# (that is where the "malicious" code sits, which is the whole point).
+# We deliberately keep this setuptools-based and publish an SDIST so the victim
+# resolver BUILDS it -- executing setup.py -- rather than installing a prebuilt
+# wheel that would run no code.
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"

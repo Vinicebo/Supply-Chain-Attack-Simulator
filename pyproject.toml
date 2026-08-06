@@ -1,0 +1,38 @@
+[project]
+name = "supply-chain-attack-simulator"
+version = "1.0.0"
+description = "Educational, local-only demonstration of the dependency-confusion attack and its defenses."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+# Detectors. Install what your platform supports.
+detect = [
+    "psutil>=5.9",     # network monitor (no privileges)
+    "watchdog>=3.0",   # filesystem monitor
+    "scapy>=2.5",      # network monitor (full capture; needs Npcap/root)
+]
+# Real asymmetric signatures for Defense #5.
+sign = ["cryptography>=42"]
+# Local private registry.
+registry = ["pypiserver>=2.0"]
+
+[project.scripts]
+scas = "runner.demo:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Explicit package list: the repo has many top-level directories (including the
+# demonstration `packages/` and `target-app/`, which must NOT be packaged), so
+# setuptools auto-discovery cannot guess. List only the real Python packages.
+py-modules = ["scas_config"]
+packages = ["detection", "defense", "docs", "monitor", "runner"]
